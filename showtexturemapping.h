@@ -2,7 +2,7 @@
 #define SHOWTEXTUREMAPPING_H
 
 #include <QOpenGLBuffer>
-#include <QOpenGLFunctions_4_3_Core>
+#include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
@@ -59,7 +59,7 @@ private:
     QVector3D m_cameraPosition;
 };
 
-class ShowTextureMappingRenderer : public FBO::Renderer, protected QOpenGLFunctions_4_3_Core
+class ShowTextureMappingRenderer : public FBO::Renderer, protected QOpenGLFunctions
 {
 public:
     ShowTextureMappingRenderer();
@@ -105,7 +105,7 @@ private:
     QOpenGLVertexArrayObject vao_mv;
     QOpenGLBuffer vbo_mv;
     QOpenGLBuffer ebo_mv;
-    int stripCount;
+    QVector<int> restartPoints;
 
     // shaders and attributes locations
     QOpenGLShaderProgram m_colorProg;

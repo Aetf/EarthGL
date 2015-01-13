@@ -3,7 +3,7 @@
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
-#include <QOpenGLFunctions_4_3_Core>
+#include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
@@ -13,7 +13,7 @@
 
 using FBO = QQuickFramebufferObject;
 
-class Earth3DRenderer : public FBO::Renderer, protected QOpenGLFunctions_4_3_Core
+class Earth3DRenderer : public FBO::Renderer, protected QOpenGLFunctions
 {
 public:
     Earth3DRenderer();
@@ -60,6 +60,7 @@ private:
     QOpenGLVertexArrayObject vao_camera;
     QOpenGLBuffer vbo_camera;
     QOpenGLBuffer ebo_camera;
+    QVector<int> camera_restartPoints;
     int stripCount;
     int fanCount;
     // axis

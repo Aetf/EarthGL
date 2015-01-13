@@ -11,7 +11,7 @@
 Earth3DRenderer::Earth3DRenderer()
     : vbo_camera(), ebo_camera(QOpenGLBuffer::IndexBuffer)
     , vbo_axis(), ebo_axis(QOpenGLBuffer::IndexBuffer)
-    , vbo_sphere(), ebo_sphere(QOpenGLBuffer::IndexBuffer)
+    , vbo_sphere(), ebo_sphere(QOpenGLBuffer::IndexBuffer), pTex_sphere(nullptr)
 {
     showVertices = showCamera = useCamera2 = false;
     resolution = 360;
@@ -116,7 +116,6 @@ void Earth3DRenderer::updateProjection(int width, int height)
 {
     QSize size(width, height);
     if (size != m_viewportSize) {
-        qDebug() << "Size set to:" << size;
         m_viewportSize = size;
         auto h = size.height();
         h = h == 0 ? 1 : h;
@@ -199,10 +198,18 @@ void Earth3DRenderer::paintCamera()
 
     vao_camera.bind();
     // draw box and cylinder with strip
-    glEnable(GL_PRIMITIVE_RESTART);
-    glPrimitiveRestartIndex(0xFFFFFFFF);
-    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
-    glDisable(GL_PRIMITIVE_RESTART);
+//    glEnable(GL_PRIMITIVE_RESTART);
+//    glPrimitiveRestartIndex(0xFFFFFFFF);
+//    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
+//    glDisable(GL_PRIMITIVE_RESTART);
+
+    int lastIdx = 0;
+    for (auto idx : camera_restartPoints) {
+        int count = idx - lastIdx;
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        lastIdx = idx + 1;
+    }
+
     // draw cycle
     glDrawElements(GL_TRIANGLE_FAN, fanCount, GL_UNSIGNED_INT, TO_OFFSET(stripCount*sizeof(GLuint)));
 
@@ -238,10 +245,16 @@ void Earth3DRenderer::paintSphere()
     vao_sphere.bind();
     pTex_sphere->bind();
     // draw
-    glEnable(GL_PRIMITIVE_RESTART);
-    glPrimitiveRestartIndex(0xFFFFFFFF);
-    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
-    glDisable(GL_PRIMITIVE_RESTART);
+//    glEnable(GL_PRIMITIVE_RESTART);
+//    glPrimitiveRestartIndex(0xFFFFFFFF);
+//    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
+//    glDisable(GL_PRIMITIVE_RESTART);
+    int lastIdx = 0;
+    for (auto idx : sphere.restartPoints()) {
+        int count = idx - lastIdx;
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        lastIdx = idx + 1;
+    }
 
     pTex_sphere->release();
     vao_sphere.release();
@@ -261,14 +274,20 @@ void Earth3DRenderer::paintSphereVertices()
 
     vao_sphere_fw.bind();
     // draw
-    glEnable(GL_PRIMITIVE_RESTART);
-    glPrimitiveRestartIndex(0xFFFFFFFF);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
+//    glEnable(GL_PRIMITIVE_RESTART);
+//    glPrimitiveRestartIndex(0xFFFFFFFF);
+//    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
+//    glDisable(GL_PRIMITIVE_RESTART);
 
+    int lastIdx = 0;
+    for (auto idx : sphere.restartPoints()) {
+        int count = idx - lastIdx;
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        lastIdx = idx + 1;
+    }
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_PRIMITIVE_RESTART);
 
     vao_sphere_fw.release();
     m_colorProg.release();
@@ -324,6 +343,7 @@ void Earth3DRenderer::createCamera()
     QVector<QVector3D> vertices;
     QVector<QVector3D> colors;
     QVector<GLuint> indices;
+    camera_restartPoints.clear();
 
     // first the rectagular box
     vertices << QVector3D(1, 0.5, 0) << QVector3D(1, 0.5, -0.5)
@@ -338,6 +358,7 @@ void Earth3DRenderer::createCamera()
             << 0xFFFFFFFF
             << 3 << 5 << 6 << 0 << 7 << 1 << 4 << 2
             << 0xFFFFFFFF;
+    camera_restartPoints << 8 << 17;
     // then generate a cylinder
     int count = vertices.size();
     for (int i = 0; i<= 360; i++) {
@@ -348,6 +369,8 @@ void Earth3DRenderer::createCamera()
         colors << QVector3D(1, 0.5, 0) << QVector3D(1, 0.5, 0);
         indices << count++ << count++;
     }
+    camera_restartPoints << indices.size();
+    indices << 0xFFFFFFFF;
     stripCount = indices.size();
     // then a cycle
     vertices << QVector3D(0, 0, 0.3);

@@ -81,7 +81,7 @@ void ShowTextureMapping::setCameraPosition(const QVector3D &pos)
 }
 
 ShowTextureMappingRenderer::ShowTextureMappingRenderer()
-    : vbo_rect()
+    : vbo_rect(), pTex_rect(nullptr)
     , vbo_mv(), ebo_mv(QOpenGLBuffer::IndexBuffer)
 {
     showMappedVertices = false;
@@ -215,17 +215,18 @@ void ShowTextureMappingRenderer::createMappedVertices()
     sphere.generate(1.0, resolution);
     QVector<QVector3D> vertices;
     QVector<GLuint> indices;
+    restartPoints.clear();
 
     int count = 0;
     for (auto idx : sphere.indices()) {
         if (idx == sphere.restartIndex()) {
+            restartPoints << indices.size();
             indices << sphere.restartIndex();
             continue;
         }
         vertices << QVector3D(uvCoordInWorld(sphere.texcoords()[idx], world), -2);
         indices << count++;
     }
-    stripCount = indices.size();
 
     if (!vao_mv.isCreated()) { vao_mv.create(); }
     vao_mv.bind();
@@ -309,14 +310,21 @@ void ShowTextureMappingRenderer::paintMappedVertices()
 
     vao_mv.bind();
     // draw
-    glEnable(GL_PRIMITIVE_RESTART);
-    glPrimitiveRestartIndex(0xFFFFFFFF);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
+//    glEnable(GL_PRIMITIVE_RESTART);
+//    glPrimitiveRestartIndex(0xFFFFFFFF);
+//    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
+//    glDisable(GL_PRIMITIVE_RESTART);
+
+    int lastIdx = 0;
+    for (auto idx : restartPoints) {
+        int count = idx - lastIdx;
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        lastIdx = idx + 1;
+    }
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_PRIMITIVE_RESTART);
 
     vao_mv.release();
     m_colorProg.release();

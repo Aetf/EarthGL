@@ -1,12 +1,10 @@
-#version 430 core
-
 uniform mat4 vProjection;
 uniform mat4 vModelView;
 
-in vec4 vPosition;
-in vec4 vColor;
+attribute vec4 vPosition;
+attribute vec4 vColor;
 
-out vec4 varyingColor;
+varying vec4 varyingColor;
 
 void main(void)
 {

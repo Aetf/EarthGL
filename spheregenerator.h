@@ -19,6 +19,8 @@ public:
     const QVector<unsigned int> &indices() const { return m_indices; }
     int indexDataLength() const { return m_indices.size() * sizeof(unsigned int); }
 
+    const QVector<int> &restartPoints() const { return m_restartPoints; }
+
     unsigned int restartIndex() const { return 0xFFFFFFFF; }
 
 protected:
@@ -31,6 +33,7 @@ private:
     QVector<QVector3D> m_normals;
     QVector<QVector2D> m_texcoords;
     QVector<unsigned int> m_indices;
+    QVector<int> m_restartPoints;
 };
 
 #endif // SPHEREGENERATOR_H

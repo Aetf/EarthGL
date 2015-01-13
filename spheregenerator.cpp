@@ -35,6 +35,7 @@ void SphereGenerator::generate(double radius, int resolution)
     m_normals.clear();
     m_indices.clear();
     m_texcoords.clear();
+    m_restartPoints.clear();
     int count = 0;
     /*
      * 0 <= alpha <= 2*pi
@@ -51,11 +52,12 @@ void SphereGenerator::generate(double radius, int resolution)
             m_indices << count++ << count++;
             m_vertices << p0 << p1;
             m_normals << p0 << p1;
-            m_texcoords << uvCoord(p0, radius)
-                        << uvCoord(p1, radius);
-//            m_texcoords << uvCoordNew(i, j, resolution)
-//                        << uvCoordNew(i, j + 1, resolution);
+//            m_texcoords << uvCoord(p0, radius)
+//                        << uvCoord(p1, radius);
+            m_texcoords << uvCoordNew(i, j, resolution)
+                        << uvCoordNew(i, j + 1, resolution);
         }
+        m_restartPoints << m_indices.size();
         m_indices << restartIndex();
     }
 }

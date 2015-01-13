@@ -1,5 +1,3 @@
-#version 430 core
-
 uniform vec4 fAmbientColor;
 uniform vec4 fDiffuseColor;
 uniform vec4 fSpecularColor;
@@ -9,12 +7,10 @@ uniform float fSpecularReflection;
 uniform float fShininess;
 uniform sampler2D tex;
 
-in vec3 normal;
-in vec3 lightDir;
-in vec3 viewerDir;
-in vec2 texCoord;
-
-out vec4 fragColor;
+varying vec3 normal;
+varying vec3 lightDir;
+varying vec3 viewerDir;
+varying vec2 texCoord;
 
 void main(void)
 {
@@ -27,6 +23,6 @@ void main(void)
                                                               dot(-reflect(nLightDir, nNormal), nViewerDir)
                                                               ), fShininess) * fSpecularColor;
 
-    gl_FragColor = texture(tex, texCoord) * (ambientIllumination + diffuseIllumination) + specularIllumination;
+    gl_FragColor = texture2D(tex, texCoord) * (ambientIllumination + diffuseIllumination) + specularIllumination;
 }
 

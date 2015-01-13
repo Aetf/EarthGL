@@ -1,18 +1,16 @@
-#version 430 core
-
 uniform mat4 vProjection;
 uniform mat4 vModelView;
 uniform mat3 vNormalMatrix;
 uniform vec3 vLightPosition;
 
-in vec4 vPosition;
-in vec3 vNormal;
-in vec2 vTexCoord;
+attribute vec4 vPosition;
+attribute vec3 vNormal;
+attribute vec2 vTexCoord;
 
-out vec3 normal;
-out vec3 lightDir;
-out vec3 viewerDir;
-out vec2 texCoord;
+varying vec3 normal;
+varying vec3 lightDir;
+varying vec3 viewerDir;
+varying vec2 texCoord;
 
 void main(void)
 {
