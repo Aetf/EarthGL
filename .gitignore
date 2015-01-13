@@ -1,0 +1,8 @@
+# QtCreator stuff
+*.pro.user*
+
+# build dir
+build/*
+
+# ignore large test dat
+tests/data/*

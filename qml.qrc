@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>shaders/coloring.frag</file>
+        <file>shaders/coloring.vert</file>
+        <file>shaders/texlighting.frag</file>
+        <file>shaders/texlighting.vert</file>
+        <file>assets/land_ocean_ice_2048.tif</file>
+        <file>assets/land_shallow_topo_2048.tif</file>
+        <file>shaders/texture.frag</file>
+        <file>shaders/texture.vert</file>
+    </qresource>
+</RCC>
