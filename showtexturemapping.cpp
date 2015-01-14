@@ -1,7 +1,6 @@
 #include <QOpenGLFramebufferObjectFormat>
 #include <QSGSimpleTextureNode>
 #include "showtexturemapping.h"
-#include "spheregenerator.h"
 
 #define TO_OFFSET(x) reinterpret_cast<const void*>(x)
 
@@ -171,15 +170,6 @@ void ShowTextureMappingRenderer::updateProjection(int width, int height)
     }
 }
 
-QVector2D ShowTextureMappingRenderer::uvCoordInWorld(const QVector2D &uv,
-                                                     const QRectF &world)
-{
-    // world rect's x and y is topLeft corner
-    // while in uv coord (0,0) is bottomLeft corner
-    return QVector2D(world.x() + world.width() * uv.x(),
-                     world.y() - world.height() * (1 - uv.y()));
-}
-
 void ShowTextureMappingRenderer::render()
 {
     glDepthMask(true);
@@ -211,22 +201,7 @@ QOpenGLFramebufferObject *ShowTextureMappingRenderer::createFramebufferObject(
 
 void ShowTextureMappingRenderer::createMappedVertices()
 {
-    SphereGenerator sphere;
     sphere.generate(1.0, resolution);
-    QVector<QVector3D> vertices;
-    QVector<GLuint> indices;
-    restartPoints.clear();
-
-    int count = 0;
-    for (auto idx : sphere.indices()) {
-        if (idx == sphere.restartIndex()) {
-            restartPoints << indices.size();
-            indices << sphere.restartIndex();
-            continue;
-        }
-        vertices << QVector3D(uvCoordInWorld(sphere.texcoords()[idx], world), -2);
-        indices << count++;
-    }
 
     if (!vao_mv.isCreated()) { vao_mv.create(); }
     vao_mv.bind();
@@ -234,15 +209,16 @@ void ShowTextureMappingRenderer::createMappedVertices()
     if (!ebo_mv.isCreated()) { ebo_mv.create();}
     ebo_mv.bind();
     ebo_mv.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    ebo_mv.allocate(indices.constData(), indices.size() * sizeof(GLuint));
+    ebo_mv.allocate(sphere.indices().constData(), sphere.indexDataLength());
 
     if (vbo_mv.isCreated()) { vbo_mv.destroy(); }
     vbo_mv.create();
     vbo_mv.bind();
     vbo_mv.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    vbo_mv.allocate(vertices.constData(), vertices.size() * sizeof(QVector3D));
+    // use texcoords here, and draw it with scale
+    vbo_mv.allocate(sphere.texcoords().constData(), sphere.texcoordDataLength());
     glVertexAttribPointer(vertex_loc_0,
-                          3, GL_FLOAT, // tupleSize, type
+                          2, GL_FLOAT, // tupleSize, type
                           GL_FALSE, 0, // normalize, stride
                           TO_OFFSET(0) // offset
                          );
@@ -302,6 +278,9 @@ void ShowTextureMappingRenderer::paintMappedVertices()
     QMatrix4x4 m;
     // Model transform
     m.scale(scale, scale, 0.99);
+    m.translate(-world.width() / 2, -world.height() / 2, 0);
+    m.scale(world.width(), world.height(), 1);
+    m.translate(0, 0, -2);
 
     m_colorProg.bind();
     m_colorProg.setUniformValue(mv_matrix_loc_0, m_viewMatrix * m);
@@ -310,21 +289,25 @@ void ShowTextureMappingRenderer::paintMappedVertices()
 
     vao_mv.bind();
     // draw
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-//    glEnable(GL_PRIMITIVE_RESTART);
-//    glPrimitiveRestartIndex(0xFFFFFFFF);
-//    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
-//    glDisable(GL_PRIMITIVE_RESTART);
-
+#if defined(Q_OS_ANDROID) || defined(TEST_ANDROID_LOCAL)
     int lastIdx = 0;
-    for (auto idx : restartPoints) {
+    for (auto idx : sphere.restartPoints(true)) {
         int count = idx - lastIdx;
-        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        glDrawElements(GL_LINE_STRIP, count, GL_UNSIGNED_INT,
+                       TO_OFFSET(lastIdx * sizeof(GLuint)));
         lastIdx = idx + 1;
     }
-
+#else
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    int lastIdx = 0;
+    for (auto idx : sphere.restartPoints(true)) {
+        int count = idx - lastIdx;
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT,
+                       TO_OFFSET(lastIdx * sizeof(GLuint)));
+        lastIdx = idx + 1;
+    }
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
     vao_mv.release();
     m_colorProg.release();

@@ -4,5 +4,8 @@
 # build dir
 build/*
 
+# temp file by editor
+*~
+
 # ignore large test dat
 tests/data/*

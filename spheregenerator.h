@@ -12,14 +12,17 @@ public:
 
     const QVector<QVector3D> &vertices() const { return m_vertices; }
     int vertexDataLength() const { return m_vertices.size() * sizeof(QVector3D); }
+
     const QVector<QVector3D> &normals() const { return m_normals; }
     int normalDataLength() const { return m_normals.size() * sizeof(QVector3D); }
+
     const QVector<QVector2D> &texcoords() const { return m_texcoords; }
     int texcoordDataLength() const { return m_texcoords.size() * sizeof(QVector2D); }
+
     const QVector<unsigned int> &indices() const { return m_indices; }
     int indexDataLength() const { return m_indices.size() * sizeof(unsigned int); }
 
-    const QVector<int> &restartPoints() const { return m_restartPoints; }
+    QVector<int> restartPoints(bool drawWireframe = false) const;
 
     unsigned int restartIndex() const { return 0xFFFFFFFF; }
 
@@ -34,6 +37,9 @@ private:
     QVector<QVector2D> m_texcoords;
     QVector<unsigned int> m_indices;
     QVector<int> m_restartPoints;
+#if defined(Q_OS_ANDROID) || defined(TEST_ANDROID_LOCAL)
+    int m_maxRestartPointsForNonWireframe;
+#endif
 };
 
 #endif // SPHEREGENERATOR_H

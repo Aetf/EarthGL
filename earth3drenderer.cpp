@@ -75,7 +75,7 @@ void Earth3DRenderer::createGeometry()
     // can safely comment out here.
     // at least one sync is done before any render
     // createSphere is called at that time.
-//    createSphere();
+    //    createSphere();
 }
 
 QOpenGLFramebufferObject *Earth3DRenderer::createFramebufferObject(const QSize &size)
@@ -198,20 +198,22 @@ void Earth3DRenderer::paintCamera()
 
     vao_camera.bind();
     // draw box and cylinder with strip
-//    glEnable(GL_PRIMITIVE_RESTART);
-//    glPrimitiveRestartIndex(0xFFFFFFFF);
-//    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
-//    glDisable(GL_PRIMITIVE_RESTART);
+    //    glEnable(GL_PRIMITIVE_RESTART);
+    //    glPrimitiveRestartIndex(0xFFFFFFFF);
+    //    glDrawElements(GL_TRIANGLE_STRIP, stripCount, GL_UNSIGNED_INT, TO_OFFSET(0));
+    //    glDisable(GL_PRIMITIVE_RESTART);
 
     int lastIdx = 0;
     for (auto idx : camera_restartPoints) {
         int count = idx - lastIdx;
-        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT,
+                       TO_OFFSET(lastIdx * sizeof(GLuint)));
         lastIdx = idx + 1;
     }
 
     // draw cycle
-    glDrawElements(GL_TRIANGLE_FAN, fanCount, GL_UNSIGNED_INT, TO_OFFSET(stripCount*sizeof(GLuint)));
+    glDrawElements(GL_TRIANGLE_FAN, fanCount, GL_UNSIGNED_INT,
+                   TO_OFFSET(stripCount * sizeof(GLuint)));
 
     vao_camera.release();
     m_colorProg.release();
@@ -245,14 +247,15 @@ void Earth3DRenderer::paintSphere()
     vao_sphere.bind();
     pTex_sphere->bind();
     // draw
-//    glEnable(GL_PRIMITIVE_RESTART);
-//    glPrimitiveRestartIndex(0xFFFFFFFF);
-//    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
-//    glDisable(GL_PRIMITIVE_RESTART);
+    //    glEnable(GL_PRIMITIVE_RESTART);
+    //    glPrimitiveRestartIndex(0xFFFFFFFF);
+    //    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
+    //    glDisable(GL_PRIMITIVE_RESTART);
     int lastIdx = 0;
     for (auto idx : sphere.restartPoints()) {
         int count = idx - lastIdx;
-        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT,
+                       TO_OFFSET(lastIdx * sizeof(GLuint)));
         lastIdx = idx + 1;
     }
 
@@ -274,20 +277,25 @@ void Earth3DRenderer::paintSphereVertices()
 
     vao_sphere_fw.bind();
     // draw
+#if defined(Q_OS_ANDROID) || defined(TEST_ANDROID_LOCAL)
+    int lastIdx = 0;
+    for (auto idx : sphere.restartPoints(true)) {
+        int count = idx - lastIdx;
+        glDrawElements(GL_LINE_STRIP, count, GL_UNSIGNED_INT,
+                       TO_OFFSET(lastIdx * sizeof(GLuint)));
+        lastIdx = idx + 1;
+    }
+#else
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-//    glEnable(GL_PRIMITIVE_RESTART);
-//    glPrimitiveRestartIndex(0xFFFFFFFF);
-//    glDrawElements(GL_TRIANGLE_STRIP, sphere.indices().size(), GL_UNSIGNED_INT, TO_OFFSET(0));
-//    glDisable(GL_PRIMITIVE_RESTART);
-
     int lastIdx = 0;
     for (auto idx : sphere.restartPoints()) {
         int count = idx - lastIdx;
-        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, TO_OFFSET(lastIdx * sizeof(GLuint)));
+        glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT,
+                       TO_OFFSET(lastIdx * sizeof(GLuint)));
         lastIdx = idx + 1;
     }
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
     vao_sphere_fw.release();
     m_colorProg.release();
@@ -361,13 +369,14 @@ void Earth3DRenderer::createCamera()
     camera_restartPoints << 8 << 17;
     // then generate a cylinder
     int count = vertices.size();
-    for (int i = 0; i<= 360; i++) {
+    for (int i = 0; i <= 360; i++) {
         double alpha = (double) i / 360 * 2 * M_PI;
         double x = 0.4 * qCos(alpha);
         double y = 0.4 * qSin(alpha);
         vertices << QVector3D(x, y, 0) << QVector3D(x, y, 0.3);
         colors << QVector3D(1, 0.5, 0) << QVector3D(1, 0.5, 0);
-        indices << count++ << count++;
+        indices.append(count++);
+        indices.append(count++);
     }
     camera_restartPoints << indices.size();
     indices << 0xFFFFFFFF;
@@ -376,7 +385,7 @@ void Earth3DRenderer::createCamera()
     vertices << QVector3D(0, 0, 0.3);
     colors << QVector3D(1, 0.5, 0);
     indices << count++;
-    for (int i = 0; i<= 360; i++) {
+    for (int i = 0; i <= 360; i++) {
         double alpha = (double) i / 360 * 2 * M_PI;
         double x = 0.4 * qCos(alpha);
         double y = 0.4 * qSin(alpha);
@@ -386,11 +395,11 @@ void Earth3DRenderer::createCamera()
     }
     fanCount = indices.size() - stripCount;
 
-    if (vao_camera.isCreated()) vao_camera.destroy();
+    if (vao_camera.isCreated()) { vao_camera.destroy(); }
     vao_camera.create();
     vao_camera.bind();
 
-    if (ebo_camera.isCreated()) ebo_camera.destroy();
+    if (ebo_camera.isCreated()) { ebo_camera.destroy(); }
     ebo_camera.create();
     ebo_camera.bind();
     ebo_camera.setUsagePattern(QOpenGLBuffer::StaticDraw);

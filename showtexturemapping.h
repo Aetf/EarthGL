@@ -7,6 +7,8 @@
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 #include <QQuickFramebufferObject>
+#include "spheregenerator.h"
+
 using FBO = QQuickFramebufferObject;
 
 class ShowTextureMapping : public QQuickFramebufferObject
@@ -74,7 +76,6 @@ protected:
     void createGeometry();
 
     void updateProjection(int width, int height);
-    QVector2D uvCoordInWorld(const QVector2D &uv, const QRectF &world);
     QVector2D scrCoordToModel(const QVector2D &xy);
 
     void createRect();
@@ -105,7 +106,7 @@ private:
     QOpenGLVertexArrayObject vao_mv;
     QOpenGLBuffer vbo_mv;
     QOpenGLBuffer ebo_mv;
-    QVector<int> restartPoints;
+    SphereGenerator sphere;
 
     // shaders and attributes locations
     QOpenGLShaderProgram m_colorProg;
