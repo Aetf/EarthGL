@@ -33,17 +33,35 @@ ApplicationWindow {
 
             cameraXRotate: 0
             cameraYRotate: 0
-            cameraDistance: 2.5
+            cameraDistance: defaultCameraDistance / zoomFactor
             showCamera: false
             useCamera2: false
-            sphereResolution: slider.lazyValue
+
+            property real defaultCameraDistance: 2.5;
+            property real zoomFactor: 1;
 
             function zoomIn() {
-                cameraDistance *= 0.9
+                zoomFactor *= 1.1;
+            }
+
+            function zoom(factor) {
+                if (factor === 0) factor = 0.001
+                zoomFactor = factor;
             }
 
             function zoomOut() {
-                cameraDistance *= 1.1
+                zoomFactor *= 0.9;
+            }
+
+            PinchArea {
+                property real capturedFactor;
+                onPinchStarted: {
+                    capturedFactor = earth.zoomFactor;
+                }
+
+                onPinchUpdated: {
+                    earth.zoom(pinch.scale * capturedFactor);
+                }
             }
 
             MouseArea {
@@ -103,7 +121,7 @@ ApplicationWindow {
                 border.color: "white"
             }
 
-            Item {
+            RowLayout {
                 id: bottomRow
                 anchors {
                     right: parent.right
@@ -111,17 +129,13 @@ ApplicationWindow {
                     bottom: parent.bottom
                     margins: 15
                 }
-                height: childrenRect.height
 
                 Text {
-                    id: txt1
-                    anchors.left: parent.left
-                    text: "顶点个数：" + slider.value * slider.value * 2
+                    text: "顶点个数"
                 }
                 Slider {
                     id: slider
-                    anchors.right: parent.right
-                    width: bottomRow.width - 115
+                    Layout.fillWidth: true
                     maximumValue: 200
                     minimumValue: 10
                     stepSize: 1
@@ -132,6 +146,17 @@ ApplicationWindow {
                         when: !slider.pressed
                         value: slider.value
                     }
+                    Binding {
+                        target: earth
+                        property: "sphereResolution"
+                        value: slider.lazyValue
+                    }
+                }
+                Text {
+                    Layout.preferredWidth: 40
+                    Layout.alignment: Qt.AlignRight
+                    text: slider.value * slider.value * 2
+                    horizontalAlignment: Text.AlignRight
                 }
             }
         }
