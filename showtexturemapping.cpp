@@ -229,7 +229,7 @@ void ShowTextureMappingRenderer::createMappedVertices()
 
 void ShowTextureMappingRenderer::createRect()
 {
-    auto img = QImage(":/assets/land_shallow_topo_2048.tif").mirrored();
+    auto img = QImage(":/assets/land_shallow_topo_2048.png").mirrored();
     pTex_rect = new QOpenGLTexture(img);
 
     GLfloat w_2 = img.width() / (GLfloat) 2;

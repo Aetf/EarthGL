@@ -475,7 +475,7 @@ void Earth3DRenderer::createSphere()
 
     if (pTex_sphere == nullptr)
         pTex_sphere = new QOpenGLTexture(
-            QImage(":/assets/land_shallow_topo_2048.tif").mirrored());
+            QImage(":/assets/land_shallow_topo_2048.png").mirrored());
 
     // A firmwire version
     if (!vao_sphere_fw.isCreated()) { vao_sphere_fw.create(); }

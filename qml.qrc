@@ -9,5 +9,6 @@
         <file>assets/land_shallow_topo_2048.tif</file>
         <file>shaders/texture.frag</file>
         <file>shaders/texture.vert</file>
+        <file>assets/land_shallow_topo_2048.png</file>
     </qresource>
 </RCC>
